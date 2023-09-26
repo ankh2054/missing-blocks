@@ -41,24 +41,9 @@ After every round completion the last block is saved as reference, and all prior
 {"block_number":237259985,"date":"2023-09-12T11:48:17.500Z"}%     
 ```
 
-## Fastify API:
+#### Documentation for swagger
 
-### For the /missing-blocks endpoint, make a GET request like this: 
-
-`http://localhost:8001/missing-blocks?ownerName=someName&startDate=2023-05-01&endDate=2023-06-01`
-
-**If you don't specify owner_name it wil provide data for all producers.**
-
-`http://localhost:8001/missing-blocks\?startDate\=2023-05-01\&endDate\=2023-06-01`
-
-### For the /missing-blocks-by-days endpoint, make a GET request like this:
-
-`http://localhost:8001/missing-blocks-by-days?ownerName=someName&days=30`
-
-
-**If you don't specify owner_name it wil provide data for all producers.**
-
-`http://localhost:8001/missing-blocks-by-days\?days\=30`
+Documentation for the API can be found at /documentation
 
 
 ### To do:
