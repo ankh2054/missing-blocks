@@ -1,0 +1,97 @@
+## Stack
+
+### 0. Set .ENV variables acordingly
+
+- `cp defaults.env  .env` 
+- `cp defaults.env fastify/.env`
+
+
+### 1. fastify/ API and Swagger documentation 
+`npm start`
+
+### 2. streamingBlocks.js - Capture missing blocks and saves to DB.
+`node streamingBlocks.js`
+
+- By default when the process starts it will check the monitoring table for the last round saved and automatically start from the next round.The monitoring table will always contain the last block of a round.
+
+If starting this process for a brand new chain OR starting from a blank slate use the --firststart option
+`node streamingBlocks.js --firststart`
+
+
+### 3. To start from a specific block number 
+
+1. Identify a block number that is the start of a producers round, then pass that into the node process. 
+❗ Make sure this startBlock is always at the start of a producers round and you must include the producername also. This is important to ensure it can work out the schedule position.
+❗ Note this cxan never be the last producer of a round.
+2. Important to also add--testing, otherwise it will automatically start from the last round saved in the monitoring table. 
+
+`node streamingBlocks.js --startBlock 237204032  --producer sentnlagents --testing`
+
+
+#### 4. For testing you can also disable irreversibility which allows for faster testing.
+
+`node streamingBlocks.js --irreversible false --testing`
+
+
+#### 5. To monitor the process is still running you can call the /monitoring fastify route:
+
+After every round completion the last block is saved as reference, and all prior entries are deleted.
+
+```curl http://localhost:8001/monitoring 
+{"block_number":237259985,"date":"2023-09-12T11:48:17.500Z"}%     
+```
+
+## Fastify API:
+
+### For the /missing-blocks endpoint, make a GET request like this: 
+
+`http://localhost:8001/missing-blocks?ownerName=someName&startDate=2023-05-01&endDate=2023-06-01`
+
+**If you don't specify owner_name it wil provide data for all producers.**
+
+`http://localhost:8001/missing-blocks\?startDate\=2023-05-01\&endDate\=2023-06-01`
+
+### For the /missing-blocks-by-days endpoint, make a GET request like this:
+
+`http://localhost:8001/missing-blocks-by-days?ownerName=someName&days=30`
+
+
+**If you don't specify owner_name it wil provide data for all producers.**
+
+`http://localhost:8001/missing-blocks-by-days\?days\=30`
+
+
+### To do:
+
+1. Complete Docker setup 
+2. Create backup script to save database data every 60min to external service like Wasabi or S3.
+
+## Docker stuff
+
+
+## ENV Variables
+
+|ENV & ARG                 |Value                          |Description                                   |
+|--------------------------|---------------------------------------|--------------------------------------|
+|**PGUSER**                |`postgresuser`                         | PostgreSQL username                  |
+|**DB_PASSWORD**           |`missinguser`                          | PostgreSQL Password                  |
+|**PGDB**                  |`missingdb`                            | PostgreSQL DB                        |
+|**PGHOST**                |`missingpw`                            | PostgreSQL Host      	              |
+|**PGPORT**                |`5432`                                 | PostgreSQL Port                      |
+|**SHIPHOST**              |`http://88.198.18.252:28888`           | SHIP host                            |
+|**HYPERIONHOST**          |`http://88.198.18.252:7000`            | Hyperion Host                        |
+|**STREAMINGHOST**         |`ws://88.198.18.252:29876`             | Streaming Host                       |
+
+
+
+```
+docker-compose run \
+-e PGUSER=postgres \
+-e DB_PASSWORD=mysecretpassword \
+-e PGDB=misssngdb  \ 
+-e PGHOST=postgres \ 
+-e PGPORT=5432 \ 
+-e SHIPHOST=http://88.198.18.252:28888 \ 
+-e HYPERIONHOST=http://88.198.18.252:7000 \ 
+-e STREAMINGHOST=ws://88.198.18.252:29876 
+```

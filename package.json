@@ -1,0 +1,21 @@
+{
+  "name": "Missing Blocks recorder",
+  "version": "1.0.0",
+  "description": "Records missing blocks",
+  "type": "module",
+  "main": "streamingBlocks.js",
+  "scripts": {
+    "start": "node streamingBlocks.js"
+  },
+  "dependencies": {
+    "@greymass/eosio": "^0.6.11",
+    "axios": "^1.4.0",
+    "dotenv": "^16.3.1",
+    "eosio-statereceiver-sentnl": "^2.3.0",
+    "eosjs": "^22.1.0",
+    "fastify": "^4.17.0",
+    "node-fetch": "^2.6.11",
+    "pg": "^8.11.0",
+    "ws": "^8.13.0"
+  }
+}
