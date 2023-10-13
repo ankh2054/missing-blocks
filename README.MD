@@ -49,7 +49,7 @@ Documentation for the API can be found at /documentation
 ### To do:
 
 1. Complete Docker setup 
-2. Create backup script to save database data every 60min to external service like Wasabi or S3.
+
 
 ## Docker stuff
 
@@ -80,3 +80,26 @@ docker-compose run \
 -e HYPERIONHOST=http://88.198.18.252:7000 \ 
 -e STREAMINGHOST=ws://88.198.18.252:29876 
 ```
+
+
+#### UPDATES
+
+
+-- Add the column without NOT NULL constraint
+ALTER TABLE missingwax.monitoring
+ADD COLUMN producer_id INTEGER;
+
+-- Update the column with appropriate values. 
+-- Here I'm setting all to 1, but you should replace this with appropriate values.
+UPDATE missingwax.monitoring
+SET producer_id = 1;
+
+-- Now add the NOT NULL constraint
+ALTER TABLE missingwax.monitoring
+ALTER COLUMN producer_id SET NOT NULL;
+
+-- Finally, add the foreign key constraint
+ALTER TABLE missingwax.monitoring
+ADD CONSTRAINT fk_producer
+FOREIGN KEY (producer_id) 
+REFERENCES missingwax.producer(id);

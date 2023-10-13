@@ -146,20 +146,25 @@ export async function getLatestSchedule() {
 }
 
 
-export async function saveToMonitoring(blockNumber, date) {
+export async function saveToMonitoring(blockNumber, date, producerName) {
     const client = createDbClient();
     try {
         await client.connect();
+
+        // Get the producer ID for the given producer name
+        const producerQuery = 'SELECT id FROM missingwax.producer WHERE owner_name = $1';
+        const producerResult = await client.query(producerQuery, [producerName]);
+        const producerId = producerResult.rows[0].id;
 
         // Delete all entries from the monitoring table
         await client.query('DELETE FROM missingwax.monitoring');
 
         // Insert the new entry
         const insertQuery = `
-            INSERT INTO missingwax.monitoring (block_number, date)
-            VALUES ($1, $2)
+            INSERT INTO missingwax.monitoring (block_number, date, producer_id)
+            VALUES ($1, $2, $3)
         `;
-        const insertValues = [blockNumber, date];
+        const insertValues = [blockNumber, date, producerId];
         await client.query(insertQuery, insertValues);
 
         console.log("New entry added to monitoring table");
