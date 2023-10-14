@@ -578,8 +578,10 @@ fastify.get('/monitoring', {
         description: 'Successful response',
         type: 'object',
         properties: {
+          owner_name: { type: 'string' },
           block_number: { type: 'integer' },
           date: { type: 'string', format: 'date-time' },
+          last_in_schedule: { type: 'boolean' },
         },
       },
     },

@@ -41,6 +41,8 @@ After every round completion the last block is saved as reference, and all prior
 {"block_number":237259985,"date":"2023-09-12T11:48:17.500Z"}%     
 ```
 
+
+
 #### Documentation for swagger
 
 Documentation for the API can be found at /documentation
@@ -84,22 +86,9 @@ docker-compose run \
 
 #### UPDATES
 
+ALTER TABLE missingwax.monitoring ADD COLUMN last_in_schedule BOOLEAN;
 
--- Add the column without NOT NULL constraint
-ALTER TABLE missingwax.monitoring
-ADD COLUMN producer_id INTEGER;
 
--- Update the column with appropriate values. 
--- Here I'm setting all to 1, but you should replace this with appropriate values.
-UPDATE missingwax.monitoring
-SET producer_id = 1;
-
--- Now add the NOT NULL constraint
-ALTER TABLE missingwax.monitoring
-ALTER COLUMN producer_id SET NOT NULL;
-
--- Finally, add the foreign key constraint
-ALTER TABLE missingwax.monitoring
-ADD CONSTRAINT fk_producer
-FOREIGN KEY (producer_id) 
-REFERENCES missingwax.producer(id);
+Restart streamingBlocks.js
+Restart fastify/server.js
+Update check_oig.py in nagios 

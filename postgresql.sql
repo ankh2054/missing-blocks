@@ -52,7 +52,10 @@ CREATE TABLE missingwax.schedules(
 CREATE TABLE missingwax.monitoring(
   id SERIAL PRIMARY KEY,  
   block_number INTEGER,
-  date TIMESTAMP
+  date TIMESTAMP,
+  producer_id INTEGER NOT NULL,
+  last_in_schedule BOOLEAN;
+  FOREIGN KEY (producer_id) REFERENCES missingwax.producer(id)
 );
 
 CREATE USER waxuser WITH ENCRYPTED PASSWORD 'nightshade900';

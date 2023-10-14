@@ -135,7 +135,7 @@ export async function getScheduleChangesForDays(ownerName, days) {
   }
 }
 
-export async function getLatestMonitoringData() {
+export async function getLatestMonitoringData2() {
   const queryText = `
     SELECT block_number, TO_CHAR(date, 'YYYY-MM-DD HH24:MI:SS.US') as date FROM missingwax.monitoring ORDER BY id DESC LIMIT 1;
   `;
@@ -155,3 +155,26 @@ export async function getLatestMonitoringData() {
 process.on('exit', async () => {
   await client.end();
 });
+
+
+
+export async function getLatestMonitoringData() {
+  const queryText = `
+    SELECT p.owner_name, m.block_number, TO_CHAR(m.date, 'YYYY-MM-DD HH24:MI:SS.US') as date, m.last_in_schedule 
+    FROM missingwax.monitoring m
+    INNER JOIN missingwax.producer p ON m.producer_id = p.id
+    ORDER BY m.id DESC 
+    LIMIT 1;
+  `;
+
+  try {
+    const { rows } = await client.query(queryText);
+    if (rows.length === 0) {
+      throw new Error('No data found in monitoring table');
+    }
+    return rows[0];
+  } catch (err) {
+    console.error('Error fetching latest monitoring data:', err);
+    throw err; // Or return null if you'd rather not throw an error.
+  }
+}
