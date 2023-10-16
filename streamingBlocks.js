@@ -202,6 +202,10 @@ let newschedule
 let intervalCheck = true;
 let startBlock;
 let producerBlocks = {};
+// For use in next round
+let newRoundtotalBlocksDeduct = 0;
+let newRoundproducerBlocks = {};
+
 let previousMissedBlocks = {};
 let schedulePosition = 0;
 let scheduleProducers = [];
@@ -210,6 +214,8 @@ let scheduleChangedInThisRound = false;
 let scheduleChangePosition = 0;
 let headBlockNum; 
 let totalMissedBlocks = 0; 
+let endBlock = 0;
+let blocksPerRound = 0;
 
 (async function() {
   let result = await fetchCurrentSchedule();
@@ -353,8 +359,8 @@ async function missingBlockSchededulefeed(block_num,block){
   console.log(`-------------------------------`);
   let producer = block.producer;
   let block_num_lib = block_num;
-  let timestamp = block.timestamp;
-
+  let timestamp = block.timestamp; 
+  
 // Schedule changed at block
   if (block_num_lib === scheduleChangedatBlock) {
     console.log(`The current block number is ${block_num_lib} and the schedule changed at block: ${scheduleChangedatBlock}`);
@@ -389,38 +395,90 @@ async function missingBlockSchededulefeed(block_num,block){
     await addEmptyBlock(producer, block_num, timestamp, true);
   }
 
-  // Check for producer change, then look at previous producer array and perform count and if less than 12 deducts from endblock.
-  // If the current producer does not equal to current producer, we are now in a new producers round. 
-  if (producer !== previousProducer && previousProducer !== null) {
-    // Get the scheduled producer from the schedule
-    let scheduledProducer = getNextProducer(previousProducer, schedule);
-    console.log('Checking if blocks were missed and updating endblock accordingly')
-    console.log(`Schedulded Producer: ${scheduledProducer}`);
-    if (producerBlocks[previousProducer]) {
-        let currentProduced = producerBlocks[previousProducer].length;
-        if (currentProduced < 12) {
-            let missedBlocks = 12 - currentProduced;
-            totalMissedBlocks += missedBlocks; // Accumulate missed blocks
-            previousMissedBlocks[previousProducer] = missedBlocks; // Store the missed blocks value
-            console.log(`${previousProducer} missed ${missedBlocks} block(s)`);
-        } else if (currentProduced >= 12 && previousMissedBlocks[previousProducer]) {
-            totalMissedBlocks -= previousMissedBlocks[previousProducer]; // Deduct the previous missed blocks value
-            delete previousMissedBlocks[previousProducer]; // Clear the value since it's compensated
-            console.log(`${previousProducer} misses have been cleared`);
+
+  // ADJUST ENDBLOCKS AND ADJUST BLOCK COUNT FOR PRODUCER ON NEW ROUND ONLY - WHEN LAST IN SCHEDULE MISSED BLOCKS 
+
+  // Check if newRoundtotalBlocksDeduct is not empty 
+  if (newRoundtotalBlocksDeduct !== undefined && newRoundtotalBlocksDeduct !== null && newRoundtotalBlocksDeduct !== 0) {
+    console.log(`Deducting ${newRoundtotalBlocksDeduct} from endBlock to accommodate last scheduled producer missing blocks in previous round.`);
+    // Add deductions to the totalMissed to be deducted from endBlock
+    totalMissedBlocks += newRoundtotalBlocksDeduct;
+    // Reset newRoundtotalBlocksDeduct to empty
+    newRoundtotalBlocksDeduct = 0
+
+
+  }
+  // Check if newRoundproducerBlocks is not empty
+  if (newRoundproducerBlocks !== undefined && Object.keys(newRoundproducerBlocks).length > 0) {
+    for (let producer in newRoundproducerBlocks) {
+        if (newRoundproducerBlocks.hasOwnProperty(producer)) {
+            let additionalBlocks = newRoundproducerBlocks[producer].AdditionalBlocks;
+            console.log(`Additional blocks for producer ${producer}: ${additionalBlocks} added`);
+            // Add the additional blocks to the producer's array
+            for (let i = 0; i < additionalBlocks; i++) {
+              producerBlocks[producer].push({ blockNum: block_num, timestamp: block.timestamp });
+            }
         }
     }
-    // Check if the scheduled producer has missed their round
-      if (producer !== scheduledProducer) {
-        console.log(`Scheduled producer ${scheduledProducer} does not match current producer ${producer}`);
-        console.log(`${scheduledProducer} therefore has missed a round`)
-        totalMissedBlocks += 12; // Add 12 to the total missed blocks
-        previousMissedBlocks[scheduledProducer] = 12; // Store that the scheduled producer missed 12 blocks
-    }
+    // Reset newRoundproducerBlocks to empty
+    newRoundproducerBlocks = {}
+  }
+
+// ADJUST ENDBLOCK COUNT
+
+// 1. If the current block number is equal to endBlock - when last in schedule misses rounds
+if (block_num_lib === endBlock) {
+  // Get last producer in current schedule
+  let lastProducer = schedule[schedule.length - 1];
+  // If the current producer is not the last one in the schedule
+  if (producer !== lastProducer) {
+    console.log('Producer does not match lastproducer in schedule.')
+    // The last producer in the schedule has missed some blocks
+    let missedBlocks = 12 - (producerBlocks[lastProducer] ? producerBlocks[lastProducer].length : 0);
+    // Remove the last 'missedBlocks' number of entries from the array for current Producer, since current producer is now in a new round 
+    producerBlocks[producer].splice(-missedBlocks); 
+    // Save total missed blocks for use in next round.
+    newRoundtotalBlocksDeduct += missedBlocks;
+    // Save the blocks for current producer to be added in the next round.
+    newRoundproducerBlocks[producer] = {AdditionalBlocks: missedBlocks, Producer: producer};
+  }
+} else {
+    // 2. If Blocks are missed when no last in schedule, but still a producer change
+    // Check for producer change, then look at previous producer array and perform count and if less than 12 deducts from endblock.
+    // If the current producer does not equal to current producer, we are now in a new producers round. 
+    if (producer !== previousProducer && previousProducer !== null) {
+      // Get the scheduled producer from the schedule
+      let scheduledProducer = getNextProducer(previousProducer, schedule);
+      console.log('Producer change detected, checking if blocks were missed and updating endblock accordingly')
+      console.log(`Schedulded Producer: ${scheduledProducer}`);
+      if (producerBlocks[previousProducer]) {
+          let currentProduced = producerBlocks[previousProducer].length;
+          if (currentProduced < 12) {
+              let missedBlocks = 12 - currentProduced;
+              totalMissedBlocks += missedBlocks; // Accumulate missed blocks
+              previousMissedBlocks[previousProducer] = missedBlocks; // Store the missed blocks value
+              console.log(`${previousProducer} missed ${missedBlocks} block(s)`);
+          } else if (currentProduced >= 12 && previousMissedBlocks[previousProducer]) {
+              totalMissedBlocks -= previousMissedBlocks[previousProducer]; // Deduct the previous missed blocks value
+              delete previousMissedBlocks[previousProducer]; // Clear the value since it's compensated
+              console.log(`${previousProducer} misses have been cleared`);
+          }
+      }
+      // Check if the scheduled producer has missed their round
+        if (producer !== scheduledProducer) {
+          console.log(`Scheduled producer ${scheduledProducer} does not match current producer ${producer}`);
+          console.log(`${scheduledProducer} therefore has missed a round`)
+          totalMissedBlocks += 12; // Add 12 to the total missed blocks
+          previousMissedBlocks[scheduledProducer] = 12; // Store that the scheduled producer missed 12 blocks
+      }
+  }
+
 }
 
+
   // To calculate the endBlock of the current Round
-  let blocksPerRound = scheduleProducers.length * 12;
-  let endBlock = startBlock + blocksPerRound - 1 - totalMissedBlocks;
+  blocksPerRound = scheduleProducers.length * 12;
+  endBlock = startBlock + blocksPerRound - 1 - totalMissedBlocks ;
 
   // Some logging
   console.log(`Start Block for round ${startBlock}`);
