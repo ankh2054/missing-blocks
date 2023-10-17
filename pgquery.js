@@ -78,6 +78,8 @@ export async function addMissingBlock(ownerName, blockNumber, date, roundMissed,
         const blockQuery = `
             INSERT INTO missingwax.missingblocks (producer_id, block_number, date, round_missed, blocks_missed, missed_block_count)
             VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (producer_id, block_number, date)
+            DO NOTHING
         `;
         const blockValues = [producerId, blockNumber, date, roundMissed, blocksMissed, missedBlockCount];
         await client.query(blockQuery, blockValues);
