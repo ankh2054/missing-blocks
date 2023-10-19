@@ -449,28 +449,32 @@ if (block_num_lib === endBlock) {
     if (producer !== previousProducer && previousProducer !== null) {
       // Get the scheduled producer from the schedule
       let scheduledProducer = getNextProducer(previousProducer, schedule);
-      console.log('Producer change detected, checking if blocks were missed and updating endblock accordingly')
+      console.log('Producer change detected, checking if blocks were missed')
       console.log(`Schedulded Producer: ${scheduledProducer}`);
       if (producerBlocks[previousProducer]) {
           let currentProduced = producerBlocks[previousProducer].length;
-          if (currentProduced < 12) {
+            // Checks if the current producer is not the scheduled producer and if the current producer has not already produced in this round.
+            if (producer !== scheduledProducer && !(producerBlocks[producer] && producerBlocks[producer].length > 0)) {
+              console.log(`Scheduled producer ${scheduledProducer} does not match current producer ${producer}`);
+              console.log(`${scheduledProducer} therefore has missed a round, updating endblock accordingly`)
+              totalMissedBlocks += 12; // Add 12 to the total missed blocks
+              previousMissedBlocks[scheduledProducer] = 12; // Store that the scheduled producer missed 12 blocks
+          } else {
+            if (currentProduced < 12) {
               let missedBlocks = 12 - currentProduced;
               totalMissedBlocks += missedBlocks; // Accumulate missed blocks
               previousMissedBlocks[previousProducer] = missedBlocks; // Store the missed blocks value
-              console.log(`${previousProducer} missed ${missedBlocks} block(s)`);
+              console.log(`${previousProducer} missed ${missedBlocks} block(s), updating endblock accordingly`);
           } else if (currentProduced >= 12 && previousMissedBlocks[previousProducer]) {
               totalMissedBlocks -= previousMissedBlocks[previousProducer]; // Deduct the previous missed blocks value
               delete previousMissedBlocks[previousProducer]; // Clear the value since it's compensated
               console.log(`${previousProducer} misses have been cleared`);
           }
+
+          }
+
       }
-      // Check if the scheduled producer has missed their round
-        if (producer !== scheduledProducer) {
-          console.log(`Scheduled producer ${scheduledProducer} does not match current producer ${producer}`);
-          console.log(`${scheduledProducer} therefore has missed a round`)
-          totalMissedBlocks += 12; // Add 12 to the total missed blocks
-          previousMissedBlocks[scheduledProducer] = 12; // Store that the scheduled producer missed 12 blocks
-      }
+
   }
 
 }

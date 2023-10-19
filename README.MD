@@ -86,9 +86,8 @@ docker-compose run \
 
 #### UPDATES
 
-ALTER TABLE missingwax.monitoring ADD COLUMN last_in_schedule BOOLEAN;
+ALTER TABLE missingwax.missingblocks
+ADD CONSTRAINT unique_block_producer_date UNIQUE (block_number, producer_id, date);
 
 
 Restart streamingBlocks.js
-Restart fastify/server.js
-Update check_oig.py in nagios 
