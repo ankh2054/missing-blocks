@@ -160,7 +160,7 @@ process.on('exit', async () => {
 
 export async function getLatestMonitoringData() {
   const queryText = `
-    SELECT p.owner_name, m.block_number, TO_CHAR(m.date, 'YYYY-MM-DD HH24:MI:SS.US') as date, m.last_in_schedule 
+    SELECT p.owner_name, m.block_number, TO_CHAR(m.date, 'YYYY-MM-DD HH24:MI:SS.US') as date, m.first_in_schedule 
     FROM missingwax.monitoring m
     INNER JOIN missingwax.producer p ON m.producer_id = p.id
     ORDER BY m.id DESC 

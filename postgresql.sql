@@ -54,7 +54,7 @@ CREATE TABLE missingwax.monitoring(
   block_number INTEGER,
   date TIMESTAMP,
   producer_id INTEGER NOT NULL,
-  last_in_schedule BOOLEAN;
+  first_in_schedule BOOLEAN;
   FOREIGN KEY (producer_id) REFERENCES missingwax.producer(id)
 );
 

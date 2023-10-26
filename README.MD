@@ -20,17 +20,17 @@ If starting this process for a brand new chain OR starting from a blank slate us
 
 ### 3. To start from a specific block number 
 
-1. Identify a block number that is the start of a producers round, then pass that into the node process. 
-❗ Make sure this startBlock is always at the start of a producers round and you must include the producername also. This is important to ensure it can work out the schedule position.
-❗ Note this can never be the last producer of a round.
-2. Important to also add--testing, otherwise it will automatically start from the last round saved in the monitoring table. 
+1. Identify a block number that is the start of a round, then pass that into the node process. 
+❗ Make sure this startBlock is always at the start of a round and you must include the producername also.
+2. Important to also add --testing, otherwise it will automatically start from the last round saved in the monitoring table.
+❗ --testing is only to be used when starting from specific position.
 
 `node streamingBlocks.js --startBlock 237204032  --producer sentnlagents --testing`
 
 
 ### 4. Disable irreversibility which allows for faster testing.
 
-`node streamingBlocks.js --irreversible false --testing`
+`node streamingBlocks.js --irreversible false`
 
 
 ### 5. To monitor the process is still running you can call the /monitoring fastify route:
@@ -38,7 +38,7 @@ If starting this process for a brand new chain OR starting from a blank slate us
 After every round completion the last block is saved as reference, and all prior entries are deleted.
 
 ```curl http://localhost:8001/monitoring 
-{"owner_name":"guild.waxdao","block_number":272521326,"date":"2023-10-19 16:13:11.500000","last_in_schedule":true}  
+{"owner_name":"guild.waxdao","block_number":272521326,"date":"2023-10-19 16:13:11.500000","first_in_schedule":true}  
 ```
 
 ### 6. To replay older blocks where schedule changes have happened, you can pass in the schedules like so.
@@ -48,7 +48,7 @@ After every round completion the last block is saved as reference, and all prior
  - `--newschedule` The new schedule as per block where schedule changed
  - `--schedule` The current schedule before schedule change
 
-```node streamingBlocksTest.js --no-livestream  --scheduleChangedatBlock 272414959 --startBlock 272413975 --producer guild.nefty --testing --newschedule '[guild.nefty,alohaeosprod,liquidstudio,eosiodetroit,ivote4waxusa,eosriobrazil,bountyblokbp,eosdacserver,teamgreymass,nation.wax,eosauthority,amsterdamwax,blacklusionx,ledgerwiseio,cryptolions1,guild.taco,3dkrenderwax,waxswedenorg,waxhiveguild,eosphereiobp,bp.wecan]' --schedule '[guild.nefty,alohaeosprod,liquidstudio,eosiodetroit,ivote4waxusa,eosriobrazil,bountyblokbp,teamgreymass,nation.wax,eosauthority,amsterdamwax,blacklusionx,ledgerwiseio,cryptolions1,guild.taco,3dkrenderwax,waxswedenorg,waxhiveguild,eosphereiobp,bp.wecan,guild.waxdao]' > test.log```
+```node streamingNewMethod.js --no-livestream  --scheduleChangedatBlock 272414959 --startBlock 272413975 --producer guild.nefty --testing --newschedule '[guild.nefty,alohaeosprod,liquidstudio,eosiodetroit,ivote4waxusa,eosriobrazil,bountyblokbp,eosdacserver,teamgreymass,nation.wax,eosauthority,amsterdamwax,blacklusionx,ledgerwiseio,cryptolions1,guild.taco,3dkrenderwax,waxswedenorg,waxhiveguild,eosphereiobp,bp.wecan]' --schedule '[guild.nefty,alohaeosprod,liquidstudio,eosiodetroit,ivote4waxusa,eosriobrazil,bountyblokbp,teamgreymass,nation.wax,eosauthority,amsterdamwax,blacklusionx,ledgerwiseio,cryptolions1,guild.taco,3dkrenderwax,waxswedenorg,waxhiveguild,eosphereiobp,bp.wecan,guild.waxdao]' > test.log```
 
 #### Documentation for swagger
 
@@ -90,3 +90,11 @@ docker-compose run \
 -e STREAMINGHOST=ws://88.198.18.252:29876 
 ```
 
+
+### UPGRADES
+
+
+```ALTER TABLE missingwax.monitoring
+RENAME COLUMN last_in_schedule TO first_in_schedule;```
+
+restart with --firstart
