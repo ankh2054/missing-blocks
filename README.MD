@@ -97,4 +97,5 @@ docker-compose run \
 ```ALTER TABLE missingwax.monitoring
 RENAME COLUMN last_in_schedule TO first_in_schedule;```
 
-restart with --firstart
+restart with --firstart run for 5 minutes then start as normal
+restart fastify 
