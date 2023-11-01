@@ -48,7 +48,7 @@ After every round completion the last block is saved as reference, and all prior
  - `--newschedule` The new schedule as per block where schedule changed
  - `--schedule` The current schedule before schedule change
 
-```node streamingNewMethod.js --no-livestream  --scheduleChangedatBlock 272414959 --startBlock 272413975 --producer guild.nefty --testing --newschedule '[guild.nefty,alohaeosprod,liquidstudio,eosiodetroit,ivote4waxusa,eosriobrazil,bountyblokbp,eosdacserver,teamgreymass,nation.wax,eosauthority,amsterdamwax,blacklusionx,ledgerwiseio,cryptolions1,guild.taco,3dkrenderwax,waxswedenorg,waxhiveguild,eosphereiobp,bp.wecan]' --schedule '[guild.nefty,alohaeosprod,liquidstudio,eosiodetroit,ivote4waxusa,eosriobrazil,bountyblokbp,teamgreymass,nation.wax,eosauthority,amsterdamwax,blacklusionx,ledgerwiseio,cryptolions1,guild.taco,3dkrenderwax,waxswedenorg,waxhiveguild,eosphereiobp,bp.wecan,guild.waxdao]' > test.log```
+```node streamingBlocks.js --no-livestream  --scheduleChangedatBlock 272414959 --startBlock 272413975 --producer guild.nefty --testing --newschedule '[guild.nefty,alohaeosprod,liquidstudio,eosiodetroit,ivote4waxusa,eosriobrazil,bountyblokbp,eosdacserver,teamgreymass,nation.wax,eosauthority,amsterdamwax,blacklusionx,ledgerwiseio,cryptolions1,guild.taco,3dkrenderwax,waxswedenorg,waxhiveguild,eosphereiobp,bp.wecan]' --schedule '[guild.nefty,alohaeosprod,liquidstudio,eosiodetroit,ivote4waxusa,eosriobrazil,bountyblokbp,teamgreymass,nation.wax,eosauthority,amsterdamwax,blacklusionx,ledgerwiseio,cryptolions1,guild.taco,3dkrenderwax,waxswedenorg,waxhiveguild,eosphereiobp,bp.wecan,guild.waxdao]' > test.log```
 
 #### Documentation for swagger
 

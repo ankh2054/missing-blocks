@@ -1,7 +1,7 @@
 import { StateReceiver } from 'eosio-statereceiver-sentnl';
 import axios from 'axios';
-import { addProducers,addMissingBlock,addEmptyBlock,addSchedule,getLatestSchedule,saveToMonitoring,getLatestMonitoringData } from './pgquery.js';
-import { shipHost,hyperionHost,streamingHost,recordEmptyBlocks} from './config.js';
+import { addProducers,addMissingBlock,addEmptyBlock,addSchedule,getLatestSchedule,saveToMonitoring,getLatestMonitoringData } from '../pgquery.js';
+import { shipHost,hyperionHost,streamingHost,recordEmptyBlocks} from '../config.js';
 
 
 

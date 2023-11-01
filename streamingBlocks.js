@@ -312,20 +312,6 @@ async function realtimeSchededulefeed(block_num){
     }
 }
 
-// Get next producer according to the schedule
-function getNextProducer(producer, schedule) {
-
-  // Get current producer schedule position index
-  let currentProducerIndex = schedule.indexOf(producer);
-  
-  // Get the next producer's index. Use modulo (%) to loop back to the start if we're at the end of the array
-  let nextProducerIndex = (currentProducerIndex + 1) % schedule.length;
-  
-  // Get the next producer from the schedule
-  let nextProducer = schedule[nextProducerIndex];
-
-  return nextProducer;
-}
 
 
 function combineSchedules(oldSchedule, newSchedule, scheduleChangePosition) {
@@ -369,7 +355,6 @@ async function missingBlockSchededulefeed(block_num,block){
     scheduleChangedInThisRound = true;
     scheduleChangePosition = oldSchedule.indexOf(producer);  //At what producer position did the schedule change.
     await addSchedule(pendingScheduleVersion, scheduleChangedatBlock, timestamp, producer, scheduleChangePosition, newschedule);
-    //scheduleProducersOld = getListFromPosition(oldSchedule, schedulePosition);
   }
 
   // Get the producers for the current round based on where we started. During startup process can start in middle of round.
@@ -410,8 +395,9 @@ async function missingBlockSchededulefeed(block_num,block){
 if (previousProducer !== null && producer !== previousProducer) {
     console.log(`Producer change detected`)
     let blockNum
-    // If we've looped back to the start of the schedule, the first producer(s) missed their round(s),
-    // or we've seen the expected number of blocks for a round, we know we have completed a round.
+    // If we've looped back to the start of the schedule 
+    // OR the first producer(s) missed their round(s)
+    // OR we've seen the expected number of blocks for a round, we know we have completed a round.
     if (producer === schedule[0] || 
         (lastProducerInRound && schedule.indexOf(producer) > schedule.indexOf(lastProducerInRound)) ||
         totalBlocksInRound >= 12 * schedule.length) {
@@ -427,7 +413,7 @@ if (previousProducer !== null && producer !== previousProducer) {
         producerBlocks[producer] = producerBlocks[producer].slice(0, -1);
       // We've completed a round, so check for missing blocks
       for (let p of scheduleProducers) {
-        console.log(`Checking for missing blocks for ${p}: Blocks produced ${producerBlocks[p].length}`)
+        console.log(`Checking for missing blocks for ${p}: Blocks produced ${producerBlocks[p] ? producerBlocks[p].length : 0}`)
         if (!producerBlocks[p] || producerBlocks[p].length < 12) {
           let missingBlocks = 12 - (producerBlocks[p] ? producerBlocks[p].length : 0);
           console.log(`Producer ${p} missed ${missingBlocks} block(s)`);
@@ -502,9 +488,9 @@ if (previousProducer !== null && producer !== previousProducer) {
       lastProducerInRound = previousProducer;
     }
   }
-  // Set producer for use in next block
+  // Set Previous  to current producer for use in next block
   previousProducer = producer;
-  //currentProducer = producer;
+
 }
 
 
@@ -536,7 +522,7 @@ async function main() {
 
   
 
-// To start from a previous block pass old schedules in.
+//3.  To start from a previous block pass old schedules in. 
   if (scheduleChangedatBlockArgIndex !== -1 && process.argv[scheduleChangedatBlockArgIndex + 1]) {
     try {
       scheduleChangedatBlock = parseInt(process.argv[scheduleChangedatBlockArgIndex + 1]);
@@ -579,11 +565,10 @@ async function main() {
     }
   }
 
-  // 3. The last block from that fully produced round + 1 = the block where the next producer will start
+  // 4. The last block from that fully produced round + 1 = the block where the next producer will start
   // Check if a startBlock argument was passed in, then check whether latest chain scheduleNumber equals what was saved in our DB.
   // This ensures we only allow to start from a past block if the schedule's never changed, otherwise we will be reading blocks based on the 
   // wrong schedule and incorrectly recording missed rounds. 
-  // IMPORTANT!! Make sure startBlock is always at the start of a new round.
   if (startBlockArgIndex !== -1 && process.argv[startBlockArgIndex + 1]) {
     if (producerArgIndex === -1 || !process.argv[producerArgIndex + 1]) {
         console.error(`Error: --startBlock requires --producer argument.`);
