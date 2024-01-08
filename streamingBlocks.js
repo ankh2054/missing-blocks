@@ -210,6 +210,7 @@ let scheduleChangePosition = 0;
 let headBlockNum; 
 let endBlock = 0;
 let blocksPerRound = 0;
+let CheckSchedulePosition = true;
 
 (async function() {
   let result = await fetchCurrentSchedule();
@@ -343,18 +344,31 @@ async function missingBlockSchededulefeed(block_num,block){
   let lastProducerInRound = null;
   let totalBlocksInRound = 0;
   
-// Schedule changed at block
+  //Schedule changed at block
   if (block_num_lib === scheduleChangedatBlock) {
-    console.log(`The current block number is ${block_num_lib} and the schedule changed at block: ${scheduleChangedatBlock}`);
-    console.log(`Schedule is being updated to version ${pendingScheduleVersion}`);
-    console.log(`New producer schedule is: ${newschedule}`);
-    console.log(`Old producer schedule is: ${schedule}`);
-
     oldSchedule = schedule; // assign current schedule as oldschedule for later reference
-    schedule = newschedule; // assign newschedule to schedule
-    scheduleChangedInThisRound = true;
-    scheduleChangePosition = oldSchedule.indexOf(producer);  //At what producer position did the schedule change.
-    await addSchedule(pendingScheduleVersion, scheduleChangedatBlock, timestamp, producer, scheduleChangePosition, newschedule);
+    if (CheckSchedulePosition) {
+      scheduleChangePosition = oldSchedule.indexOf(producer); // At what producer position did the schedule change.
+      console.log(`Schedule change position ${scheduleChangePosition}`);
+    }
+    // If schedule changed at position 0 the increment by 1, so we don't count the schedule changes against the previous round.
+    if (scheduleChangePosition === 0) {
+      console.log(`Schedule changed at Position 0 so incrementing with 1`)
+      scheduleChangedatBlock += 1;
+      scheduleChangePosition = 1;
+      CheckSchedulePosition = false;
+    } else {
+      console.log(`The current block number is ${block_num_lib} and the schedule changed at block: ${scheduleChangedatBlock}`);
+      console.log(`Schedule is being updated to version ${pendingScheduleVersion}`);
+      console.log(`New producer schedule is: ${newschedule}`);
+      console.log(`Old producer schedule is: ${schedule}`);
+
+      //Re-assign schedule change position for DB entry
+      scheduleChangePosition = oldSchedule.indexOf(producer);
+      schedule = newschedule; // assign newschedule to schedule
+      scheduleChangedInThisRound = true;
+      await addSchedule(pendingScheduleVersion, scheduleChangedatBlock, timestamp, producer, scheduleChangePosition, newschedule);
+    }
   }
 
   // Get the producers for the current round based on where we started. During startup process can start in middle of round.
@@ -403,6 +417,7 @@ if (previousProducer !== null && producer !== previousProducer) {
         totalBlocksInRound >= 12 * schedule.length) {
         console.log(`We have completed a round checking for missing blocks`)
         // If the schedule changed during this round, then combine old and new schedule accordingly.
+        // If scheduleChangePosition is 0 then don't combine this round.
         if ( scheduleChangedInThisRound ){
           console.log('Schedule changed in this round'); 
           scheduleProducers = combineSchedules(oldSchedule, schedule, scheduleChangePosition);
@@ -467,9 +482,11 @@ if (previousProducer !== null && producer !== previousProducer) {
       }
 
       // Reset Schedule Change parameters for the next time.
+      // If scheduleChangePosition is 0 then o
       if (scheduleChangedInThisRound) {
         oldSchedule = null;
         scheduleChangedInThisRound = false;
+        CheckSchedulePosition = false;
         }
 
        // Reset the counters for the next round and save monitoring
@@ -510,7 +527,7 @@ async function main() {
   // Set variables for main() start function
   let producerStart; // Variable that will be assigned ith the starting producer 
   let lastSavedBlock; // Last save block in monitoring DB
-  let irreversible = true; // set irreversible value - defauklt is true
+  let irreversible = true; // set irreversible value - default is true
 
   //1. Assign the current schedule 
   let result = await fetchCurrentSchedule();
