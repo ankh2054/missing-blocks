@@ -314,7 +314,6 @@ async function realtimeSchededulefeed(block_num){
 }
 
 
-
 function combineSchedules(oldSchedule, newSchedule, scheduleChangePosition) {
   // Create a new array to store the combined schedule
   let combinedSchedule = [];
@@ -409,6 +408,7 @@ async function missingBlockSchededulefeed(block_num,block){
 if (previousProducer !== null && producer !== previousProducer) {
     console.log(`Producer change detected`)
     let blockNum
+    // ROUND COMPLETION CODE
     // If we've looped back to the start of the schedule 
     // OR the first producer(s) missed their round(s)
     // OR we've seen the expected number of blocks for a round, we know we have completed a round.
@@ -420,6 +420,21 @@ if (previousProducer !== null && producer !== previousProducer) {
         // If scheduleChangePosition is 0 then don't combine this round.
         if ( scheduleChangedInThisRound ){
           console.log('Schedule changed in this round'); 
+          // Get the producer name from the old schedule using the schedule change position
+          let oldProducerName = oldSchedule[scheduleChangePosition];
+          // Account for the schedule changing mid producer round.
+          // If the schedule changed at position 13 for example and the producer in position from the old schedule produced a single block, the producer in the new schedule in position 13 will now only have to produce 11 blocks.
+          if (producerBlocks[oldProducerName] && producerBlocks[oldProducerName].length > 0) {
+            console.log('Looks like schedule changed mid producer round');
+            // Make a note of these entries
+            let oldProducerEntries = producerBlocks[oldProducerName];
+
+            // Get the producer name from the new schedule using the schedule change position
+            let newProducerName = newschedule[scheduleChangePosition];
+            console.log(`Adding ${ oldProducerEntries.length} block from ${oldProducerName} towards ${newProducerName} block count`);
+            // Add the old producer's entries to the new producer's entries in producerBlocks
+            producerBlocks[newProducerName] = producerBlocks[newProducerName].concat(oldProducerEntries);
+          }
           scheduleProducers = combineSchedules(oldSchedule, schedule, scheduleChangePosition);
         }
         console.log(`Producer Schedule ${scheduleProducers}`)
