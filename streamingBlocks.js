@@ -85,7 +85,7 @@ async function fetchscheduleVersion() {
 }
 
 
-async function fetchBlockHeaderState(block_num_or_id, pendingScheduleVersion) {
+async function fetchBlockHeaderStateOLD(block_num_or_id, pendingScheduleVersion) {
   try {
     const response = await axios.get(`${hyperionHost}/v1/chain/get_block_header_state?block_num_or_id=${block_num_or_id}`);
     const blockStateVersion =  parseInt(response.data.active_schedule.version);
@@ -103,6 +103,36 @@ async function fetchBlockHeaderState(block_num_or_id, pendingScheduleVersion) {
       };
     } else {
       console.log('Match found in block header state')
+      return {
+        match: false,
+        producerNames
+      };
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+async function fetchBlockHeaderState(block_num_or_id, pendingScheduleVersion) {
+  try {
+    const response = await axios.post(`${shipHost}/v1/chain/get_block_header_state`, {
+      block_num_or_id: block_num_or_id
+    });
+    const blockStateVersion =  parseInt(response.data.active_schedule.version);
+    const producers = response.data.active_schedule.producers;
+    const producerNames = producers.map(producer => producer.producer_name);
+    pendingScheduleVersion = parseInt(pendingScheduleVersion); // Parse pendingScheduleVersion into integer
+    console.log(`Pending version: ${pendingScheduleVersion} vs ${blockStateVersion} `)
+    console.log(`block_num:  ${block_num_or_id} `)
+
+    if(blockStateVersion === pendingScheduleVersion) {
+      console.log('Schedule Match found in block header state')
+      return {
+        match: true,
+        producerNames
+      };
+    } else {
+      console.log('Match not found in block header state')
       return {
         match: false,
         producerNames
@@ -241,7 +271,6 @@ async function updateScheduleWhenReady(block_num_or_id, pendingScheduleVersion) 
       try {
           console.log("Waiting for new schedule to show in Blockheader state");
           const blockHeaderState = await fetchBlockHeaderState(block_num_or_id, pendingScheduleVersion);
-          console.log(blockHeaderState.data)
           
           //if (blockHeaderState !== undefined) { // Check if blockHeaderState is not undefined
               console.log(`Checking Block number header state: ${block_num_or_id}`);
