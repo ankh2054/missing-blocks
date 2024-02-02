@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@greymass/eosio": "^0.6.11",
-    "axios": "^1.4.0",
+    "axios": "^1.6.0",
     "dotenv": "^16.3.1",
     "eosio-statereceiver-sentnl": "^2.3.1",
     "eosjs": "^22.1.0",
