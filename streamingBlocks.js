@@ -270,8 +270,8 @@ async function updateScheduleWhenReady(block_num_or_id, pendingScheduleVersion) 
   while (true) {
       try {
           console.log("Waiting for new schedule to show in Blockheader state");
+          await sleep(100);
           const blockHeaderState = await fetchBlockHeaderState(block_num_or_id, pendingScheduleVersion);
-          
           //if (blockHeaderState !== undefined) { // Check if blockHeaderState is not undefined
               console.log(`Checking Block number header state: ${block_num_or_id}`);
 
