@@ -241,6 +241,8 @@ let headBlockNum;
 let endBlock = 0;
 let blocksPerRound = 0;
 let CheckSchedulePosition = true;
+let lastProducerInRound = null;
+
 
 (async function() {
   let result = await fetchCurrentSchedule();
@@ -369,7 +371,7 @@ async function missingBlockSchededulefeed(block_num,block){
   let producer = block.producer;
   let block_num_lib = block_num;
   let timestamp = block.timestamp; 
-  let lastProducerInRound = null;
+  //let lastProducerInRound = null;
   let totalBlocksInRound = 0;
   
   //Schedule changed at block
@@ -433,16 +435,25 @@ async function missingBlockSchededulefeed(block_num,block){
   // Increment the total block count
   totalBlocksInRound++;
 
+
+// Assuming you have a way to track the previous and current producers
+let previousProducerIndex = schedule.indexOf(previousProducer);
+let currentProducerIndex = schedule.indexOf(producer);
+
+// Assuming 'lastProducerInRound' is updated to the expected last producer of each round
+let expectedLastProducerIndex = schedule.length - 1; // Index of 'guild.waxdao'
+
 // If the producer has changed
 if (previousProducer !== null && producer !== previousProducer) {
     console.log(`Producer change detected`)
+    console.log(`Last producer in round ${lastProducerInRound}`)
     let blockNum
     // ROUND COMPLETION CODE
     // If we've looped back to the start of the schedule 
     // OR the first producer(s) missed their round(s)
     // OR we've seen the expected number of blocks for a round, we know we have completed a round.
-    if (producer === schedule[0] || 
-        (lastProducerInRound && schedule.indexOf(producer) > schedule.indexOf(lastProducerInRound)) ||
+    if (producer === schedule[0] || // Are we back to first producer in schedule
+        (previousProducerIndex === expectedLastProducerIndex && currentProducerIndex !== 0) ||
         totalBlocksInRound >= 12 * schedule.length) {
         console.log(`We have completed a round checking for missing blocks`)
         // If the schedule changed during this round, then combine old and new schedule accordingly.
@@ -504,7 +515,7 @@ if (previousProducer !== null && producer !== previousProducer) {
           }
           // If the producer is the first one in the schedule, use the previous calculation
           else {
-            blockNum = endBlock - schedule.length * 12 + producerIndex * 12 + 1;
+            block_num_lib = block_num_lib - schedule.length * 12 + 12 // Take schedule length + 12 to account for missed round
             timestamp = new Date(block.timestamp);
             timestamp.setSeconds(timestamp.getSeconds() - schedule.length * 12 * 0.5 + producerIndex * 12 * 0.5);
           }
