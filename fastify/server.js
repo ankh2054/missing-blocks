@@ -1,4 +1,5 @@
 import fastifyOrig from 'fastify';
+import fastifyCors from '@fastify/cors';
 const fastify = fastifyOrig({ logger: true });
 import swagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
@@ -73,6 +74,14 @@ async function calculateTotalExpectedBlocks(days, scheduleChanges, ownerName) {
 // blocks I did not produce IF the schedule changed after my position, count from the next round only.
 // You can also use the block numbers to help with the counting.
 
+// Register CORS plugin and configure it
+fastify.register(fastifyCors, {
+  // Adjust the options according to your requirements
+  origin: ['https://missm.sentnl.io', 'http://missm.sentnl.io'], // Specify allowed origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+  credentials: true, // Supports credentials like cookies
+});
 
 await fastify.register(swagger, {
     routePrefix: '/documentation',
