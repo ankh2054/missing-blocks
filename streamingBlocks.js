@@ -1,6 +1,6 @@
 import { StateReceiver } from 'eosio-statereceiver-sentnl';
 import axios from 'axios';
-import { addProducers,addMissingBlock,addEmptyBlock,addSchedule,getLatestSchedule,saveToMonitoring,getLatestMonitoringData } from './pgquery.js';
+import { addProducers,addMissingBlock,addEmptyBlock,addSchedule,getLatestSchedule,saveToMonitoring,getLatestMonitoringData, addProducerToUnregbot,clearUnregbotTable } from './pgquery.js';
 import { shipHost,hyperionHost,streamingHost,recordEmptyBlocks} from './config.js';
 
 
@@ -61,13 +61,28 @@ async function fetchscheduleVersion() {
     const response = await axios.get(`${shipHost}/v1/chain/get_producer_schedule`);
     let activeSchedule = response.data.active;
     let proposedSchedule = response.data.proposed;
-    let version, schedule, producers;
+    let version, schedule, producers
 
     // Check if proposed schedule exists and use its data, otherwise use the active schedule
     if (proposedSchedule !== null) {
       version = proposedSchedule.version;
       producers = proposedSchedule.producers;
       schedule = producers.map(producer => producer.producer_name);
+      // Get list of current active producers
+      let producersActive = activeSchedule.producers;
+      let scheduleActive =  producersActive.map(producer => producer.producer_name);
+      // This will give you producers that are in Active schedule but not in the proposed schedule
+      let uniqueActiveProducers = scheduleActive.filter(producer => !schedule.includes(producer));
+      console.log('Producers in active schedule but not in proposed:', uniqueActiveProducers);
+      // Add each unique active producer to the unregbot table
+      uniqueActiveProducers.forEach(async (producerName) => {
+        try {
+            await addProducerToUnregbot(producerName);
+            console.log(`Added ${producerName} to unregbot table.`);
+        } catch (error) {
+            console.error(`Failed to add ${producerName} to unregbot table: ${error}`);
+        }
+      });
     } else {
       version = activeSchedule.version;
       producers = activeSchedule.producers;
@@ -84,34 +99,6 @@ async function fetchscheduleVersion() {
   }
 }
 
-
-async function fetchBlockHeaderStateOLD(block_num_or_id, pendingScheduleVersion) {
-  try {
-    const response = await axios.get(`${hyperionHost}/v1/chain/get_block_header_state?block_num_or_id=${block_num_or_id}`);
-    const blockStateVersion =  parseInt(response.data.active_schedule.version);
-    const producers = response.data.active_schedule.producers;
-    const producerNames = producers.map(producer => producer.producer_name);
-    pendingScheduleVersion = parseInt(pendingScheduleVersion); // Parse pendingScheduleVersion into integer
-    console.log(`Pending version: ${pendingScheduleVersion} vs ${blockStateVersion} `)
-    console.log(`block_num:  ${block_num_or_id} `)
-
-    if(blockStateVersion === pendingScheduleVersion) {
-      console.log('Schedule Match found in block header state')
-      return {
-        match: true,
-        producerNames
-      };
-    } else {
-      console.log('Match found in block header state')
-      return {
-        match: false,
-        producerNames
-      };
-    }
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
 
 async function fetchBlockHeaderState(block_num_or_id, pendingScheduleVersion) {
   try {
@@ -305,12 +292,14 @@ async function updateScheduleWhenReady(block_num_or_id, pendingScheduleVersion) 
 
 
 // Set up the interval
+// Combine both versions and asses which one is being removed.
 setInterval(async () => {
   try {
     // Fetch the current schedule version from the chain
     const { version,schedule } = await fetchscheduleVersion();
     console.log(`Version: ${version}`)
     console.log(`currentScheduleVersion: ${currentScheduleVersion}`)
+    // Update prouders to ensure we have all teh producers
     await addProducers(schedule);
 
 
@@ -377,6 +366,7 @@ async function missingBlockSchededulefeed(block_num,block){
   //Schedule changed at block
   if (block_num_lib === scheduleChangedatBlock) {
     oldSchedule = schedule; // assign current schedule as oldschedule for later reference
+    await clearUnregbotTable();
     if (CheckSchedulePosition) {
       scheduleChangePosition = oldSchedule.indexOf(producer); // At what producer position did the schedule change.
       console.log(`Schedule change position ${scheduleChangePosition}`);

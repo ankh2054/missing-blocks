@@ -101,6 +101,35 @@ export async function getEmptyBlockData(ownerName, startDate, endDate) {
   return res.rows;
 }
 
+
+export async function getLatestUnregOwnerName() {
+  try {
+    const { rows: unregRows } = await client.query(`
+      SELECT producer_id FROM missingwax.unregbot ORDER BY id DESC LIMIT 1;
+    `);
+
+    if (unregRows.length === 0) {
+      return null; // No unregistered producer found
+    }
+
+    const producerId = unregRows[0].producer_id;
+
+    const { rows: producerRows } = await client.query(`
+      SELECT owner_name FROM missingwax.producer WHERE id = $1;
+    `, [producerId]);
+
+    if (producerRows.length === 0) {
+      return null; // No producer found with the given ID
+    }
+
+    return producerRows[0].owner_name;
+  } catch (err) {
+    console.error('Error fetching latest unregistered owner name:', err);
+    throw err;
+  }
+}
+
+
 export async function getEmptyBlockDataByDays(ownerName, days) {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);

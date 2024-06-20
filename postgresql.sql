@@ -16,6 +16,15 @@ CREATE TABLE missingwax.producer (
   owner_name VARCHAR(12) UNIQUE
 );
 
+
+/* Keep a list of producers that are pending for removal - once schedule changes table is cleared*/
+CREATE TABLE missingwax.unregbot (
+  id SERIAL PRIMARY KEY,
+  producer_id INTEGER NOT NULL UNIQUE,
+  FOREIGN KEY (producer_id) REFERENCES missingwax.producer(id)
+);
+
+
 /* List of missing blocks and or rounds */
 CREATE TABLE missingwax.missingblocks(
   id SERIAL PRIMARY KEY,

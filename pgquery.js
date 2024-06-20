@@ -16,7 +16,40 @@ function createDbClient() {
     });
   }
 
+  export async function addProducerToUnregbot(ownerName) {
+    const client = createDbClient();
+    try {
+        await client.connect();
+        // First, get the producer ID from the producer table using the owner name
+        const producerQuery = 'SELECT id FROM missingwax.producer WHERE owner_name = $1';
+        const producerResult = await client.query(producerQuery, [ownerName]);
+        if (producerResult.rows.length === 0) {
+            throw new Error(`No producer found with the name ${ownerName}`);
+        }
+        const producerId = producerResult.rows[0].id;
 
+        // Then, insert the producer ID into the unregbot table only if it does not already exist
+        const query = 'INSERT INTO missingwax.unregbot (producer_id) VALUES ($1) ON CONFLICT (producer_id) DO NOTHING';
+        await client.query(query, [producerId]);
+    } catch (error) {
+        console.error(`Error: ${error}`);
+    } finally {
+        await client.end();
+    }
+}
+
+export async function clearUnregbotTable() {
+    const client = createDbClient();
+    try {
+        await client.connect();
+        await client.query('DELETE FROM missingwax.unregbot');
+        console.log("Unregbot table cleared");
+    } catch (error) {
+        console.error(`Error clearing unregbot table: ${error}`);
+    } finally {
+        await client.end();
+    }
+}
 
 export async function addProducers(producerNames) {
     const client = createDbClient();

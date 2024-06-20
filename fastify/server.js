@@ -4,7 +4,7 @@ const fastify = fastifyOrig({ logger: true });
 import swagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import dotenv from 'dotenv';
-import { getMissingBlockData, getMissingBlockDataByDays,getEmptyBlockData,getEmptyBlockDataByDays,getScheduleChangesForDays,getOwnerIDByName,getLatestMonitoringData } from './pgquery.js';
+import { getMissingBlockData, getMissingBlockDataByDays,getEmptyBlockData,getEmptyBlockDataByDays,getScheduleChangesForDays,getOwnerIDByName,getLatestMonitoringData,getLatestUnregOwnerName } from './pgquery.js';
 
 
 // Helper function to calculate total missed blocks
@@ -609,6 +609,42 @@ fastify.get('/monitoring', {
     }
   },
 });
+
+fastify.get('/unregging', {
+  schema: {
+    hide: true,
+    description: 'Fetch the latest unregistered producer name',
+    tags: ['Monitoring'],
+    summary: 'Get the owner name of the latest unregistered producer',
+    response: {
+      200: {
+        description: 'Successful response',
+        type: 'object',
+        properties: {
+          owner_name: { type: 'string', nullable: true }
+        }
+      },
+      500: {
+        description: 'Server error',
+        type: 'object',  // added this line
+        properties: {
+          error: { type: 'string' }
+        }
+      }
+    }
+  },
+  handler: async (request, reply) => {
+    try {
+      const ownerName = await getLatestUnregOwnerName();
+      reply.send({ owner_name: ownerName || null });
+    } catch (err) {
+      reply.status(500).send({
+        error: 'An error occurred while fetching the latest unregistered owner name.'
+      });
+    }
+  },
+});
+
 
 // Start the server
 const start = async () => {
