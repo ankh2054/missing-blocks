@@ -1,5 +1,5 @@
 import { StateReceiver } from 'eosio-statereceiver-sentnl';
-import axios from 'axios';
+import ky from 'ky';
 import { addProducers,addMissingBlock,addEmptyBlock,addSchedule,getLatestSchedule,saveToMonitoring,getLatestMonitoringData, addProducerToUnregbot,clearUnregbotTable } from './pgquery.js';
 import { shipHost,hyperionHost,streamingHost,recordEmptyBlocks} from './config.js';
 
@@ -28,17 +28,17 @@ function getListFromPosition(schedule, schedulePosition) {
 
 
 async function getHeadBlock(){
-    const response = await axios.get(`${shipHost}/v1/chain/get_info`);
-    var headBlockNum = parseInt(response.data.head_block_num);
+    const response = await ky.get(`${shipHost}/v1/chain/get_info`).json();
+    var headBlockNum = parseInt(response.head_block_num);
     return headBlockNum;
 }
 
 async function fetchCurrentSchedule() {
   try {
     let schedule = [];
-    const response = await axios.get(`${shipHost}/v1/chain/get_producer_schedule`);
-    const version = parseInt(response.data.active.version);
-    response.data.active.producers.forEach(producer => {
+    const response = await ky.get(`${shipHost}/v1/chain/get_producer_schedule`).json();
+    const version = parseInt(response.active.version);
+    response.active.producers.forEach(producer => {
       schedule.push(producer.producer_name);
      });
 
@@ -58,9 +58,9 @@ async function fetchCurrentSchedule() {
 // Does /v2/history/get_schedules new version and new schedule or only new version is pending?
 async function fetchscheduleVersion() {
   try {
-    const response = await axios.get(`${shipHost}/v1/chain/get_producer_schedule`);
-    let activeSchedule = response.data.active;
-    let proposedSchedule = response.data.proposed;
+    const response = await ky.get(`${shipHost}/v1/chain/get_producer_schedule`).json();
+    let activeSchedule = response.active;
+    let proposedSchedule = response.proposed;
     let version, schedule, producers
 
     // Check if proposed schedule exists and use its data, otherwise use the active schedule
@@ -102,11 +102,11 @@ async function fetchscheduleVersion() {
 
 async function fetchBlockHeaderState(block_num_or_id, pendingScheduleVersion) {
   try {
-    const response = await axios.post(`${shipHost}/v1/chain/get_block_header_state`, {
-      block_num_or_id: block_num_or_id
-    });
-    const blockStateVersion =  parseInt(response.data.active_schedule.version);
-    const producers = response.data.active_schedule.producers;
+    const response = await ky.post(`${shipHost}/v1/chain/get_block_header_state`, {
+      json: { block_num_or_id }
+    }).json();
+    const blockStateVersion =  parseInt(response.active_schedule.version);
+    const producers = response.active_schedule.producers;
     const producerNames = producers.map(producer => producer.producer_name);
     pendingScheduleVersion = parseInt(pendingScheduleVersion); // Parse pendingScheduleVersion into integer
     console.log(`Pending version: ${pendingScheduleVersion} vs ${blockStateVersion} `)
@@ -140,28 +140,28 @@ async function fetchBlocks(params,schedule) {
   let response;
 
   try {
-    response = await axios.get(url, { 
-        params: {
-            limit: 1000,
-            account: 'eosio',
-            'act.name': 'onblock',
-            after: params.start_from,
-            before: params.read_until,
-            sort: 'asc'
-        }
-    });
+    response = await ky.get(url, {
+      searchParams: {
+        limit: 1000,
+        account: 'eosio',
+        'act.name': 'onblock',
+        after: params.start_from,
+        before: params.read_until,
+        sort: 'asc'
+      }
+    }).json();
   } catch (error) {
     console.error('Error making API call:', error);
     throw error;
   }
-  if (!response.data || !Array.isArray(response.data.actions)) {
-    console.error('Invalid response from API:', response.data);
+  if (!response || !Array.isArray(response.actions)) {
+    console.error('Invalid response from API:', response);
     throw new Error('Invalid response from API');
   }
   let firstProducer = schedule[0];
   let lastProducer = null;
   let foundFirstProducer = false;
-  for (const action of response.data.actions) {
+  for (const action of response.actions) {
     const producer = action.producer; // Make sure to access the correct field
     
     if (producer === firstProducer && lastProducer !== firstProducer) {

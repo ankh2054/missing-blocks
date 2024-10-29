@@ -9,11 +9,11 @@
   },
   "dependencies": {
     "@greymass/eosio": "^0.6.11",
-    "axios": "^1.6.0",
     "dotenv": "^16.3.1",
     "eosio-statereceiver-sentnl": "^2.3.1",
     "eosjs": "^22.1.0",
     "fastify": "^4.17.0",
+    "ky": "^1.7.2",
     "minimist": "^1.2.8",
     "node-fetch": "^2.6.11",
     "pg": "^8.11.0",
