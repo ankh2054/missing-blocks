@@ -139,55 +139,40 @@ The following tables are automatically created on first startup:
 |**SHIPHOST**              |`http://88.198.18.252:28888`           | SHIP host                            |
 |**HYPERIONHOST**          |`http://88.198.18.252:7000`            | Hyperion Host                        |
 |**STREAMINGHOST**         |`ws://88.198.18.252:29876`             | Streaming Host                       |
-|**VIRTUAL_HOST**          |`your.domain.com`                      | Domain for nginx-proxy routing        |
-|**LETSENCRYPT_HOST**      |`your.domain.com`                      | Domain for SSL certificate           |
 
 > **Note**: All environment variables can be configured in the `.env` file. Docker Compose will automatically pick up these values - no need to pass them manually on the command line.
-
-### Using with nginx-proxy
-The application is configured to work with nginx-proxy for automatic SSL and domain routing. To use this:
-
-1. Make sure nginx-proxy is running:
-```bash
-# Example nginx-proxy setup (if you don't have it running)
-docker network create nginx-proxy
-docker run -d -p 80:80 -p 443:443 \
-  --name nginx-proxy \
-  --net nginx-proxy \
-  -v /var/run/docker.sock:/tmp/docker.sock:ro \
-  jwilder/nginx-proxy
-```
-
-2. Set these variables in your .env file:
-```bash
-VIRTUAL_HOST=your.domain.com
-LETSENCRYPT_HOST=your.domain.com
-```
-
-The application will automatically connect to the nginx-proxy network and be accessible via your domain with SSL.
 
 ### Running both mainnet and testnet instances
 To run multiple instances of the application using different configurations:
 
 1. Create different env files for each instance:
 ```bash
-cp defaults.env .env.instance1
-cp defaults.env .env.instance2
+cp defaults.env .env.mainnet
+cp defaults.env .env.testnet
 ```
 
-2. Start each instance with its own env file:
+2. Modify the database host in each env file:
+```bash
+# In .env.mainnet
+PGHOST=mainnet-db
+
+# In .env.testnet
+PGHOST=testnet-db
+```
+
+3. Start each instance with its own env file:
 ```bash
 # Start first instance
-docker-compose --env-file .env.instance1 -p instance1 up -d
+docker-compose --env-file .env.mainnet -p mainnet up -d
 
 # Start second instance
-docker-compose --env-file .env.instance2 -p instance2 up -d
+docker-compose --env-file .env.testnet -p testnet up -d
 ```
 
-3. Stop specific instances:
+4. Stop specific instances:
 ```bash
-docker-compose -p instance1 down
-docker-compose -p instance2 down
+docker-compose -p mainnet down
+docker-compose -p testnet down
 ```
 
 

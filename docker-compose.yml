@@ -43,9 +43,7 @@ services:
     restart: unless-stopped
 
 networks:
-  app-network:
-    driver: bridge
-  nginx-proxy:
+  sentnl-net:
     external: true
 
 volumes:
