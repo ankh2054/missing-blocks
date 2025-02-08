@@ -2,9 +2,44 @@
 
 ### 0. Set .ENV variables acordingly
 
+You can run this application either directly or with Docker:
+
+#### Direct Setup:
 - `cp defaults.env  .env` 
 - `cp defaults.env fastify/.env`
 
+#### Docker Setup:
+1. Copy the defaults:
+```bash
+cp defaults.env .env
+```
+
+2. Start the application:
+```bash
+docker-compose up --build
+```
+
+3. To stop:
+```bash
+docker-compose down
+```
+
+The Docker setup includes:
+- PostgreSQL database (auto-initialized with schema)
+- Node.js application running both streamingBlocks and fastify server
+- Automatic environment variable configuration from .env file
+- Data persistence via Docker volumes
+
+To run with custom environment variables:
+```bash
+docker-compose up -d --build \
+  -e PGUSER=customuser \
+  -e DB_PASSWORD=custompassword \
+  -e PGDB=customdb \
+  -e SHIPHOST=http://custom:8888 \
+  -e HYPERIONHOST=http://custom:7000 \
+  -e STREAMINGHOST=ws://custom:9876
+```
 
 ### 1. fastify/ API and Swagger documentation 
 `npm start`
@@ -62,6 +97,62 @@ Documentation for the API can be found at /documentation
 
 ## Docker stuff
 
+The application is containerized using Docker and docker-compose. The setup includes:
+
+1. **Application Container**:
+   - Runs both streamingBlocks.js and fastify server
+   - Auto-configured with environment variables
+   - Built from Node.js 18
+
+2. **Database Container**:
+   - PostgreSQL 13
+   - Persistent data storage
+   - Auto-initialized with schema from `postgresql.sql`
+   - Creates database `missingwax` with all required tables
+   - Creates user `waxuser` with necessary permissions
+   - Exposed on configured port (default 5432)
+
+### Quick Start
+```bash
+# Start everything
+docker-compose up --build
+
+# Start in background
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Stop everything
+docker-compose down
+
+# Stop and remove volumes (will reset database)
+docker-compose down -v
+```
+
+### Database Reset
+If you need to reset the database:
+```bash
+# Remove existing containers and volumes
+docker-compose down -v
+
+# Start fresh (will reinitialize DB from postgresql.sql)
+docker-compose up --build
+```
+
+### Accessing Services
+- Fastify API: http://localhost:3000
+- PostgreSQL: localhost:5432 (credentials from .env file)
+- Swagger docs: http://localhost:3000/documentation
+
+### Database Schema
+The following tables are automatically created on first startup:
+- `missingwax.producer`: List of producers on chain
+- `missingwax.unregbot`: Producers pending removal
+- `missingwax.missingblocks`: Missing blocks and rounds
+- `missingwax.emptyblocks`: Blocks with zero transactions
+- `missingwax.schedules`: Producer schedules
+- `missingwax.monitoring`: Block monitoring data
 
 ## ENV Variables
 
@@ -76,20 +167,7 @@ Documentation for the API can be found at /documentation
 |**HYPERIONHOST**          |`http://88.198.18.252:7000`            | Hyperion Host                        |
 |**STREAMINGHOST**         |`ws://88.198.18.252:29876`             | Streaming Host                       |
 
-
-
-```
-docker-compose run \
--e PGUSER=postgres \
--e DB_PASSWORD=mysecretpassword \
--e PGDB=misssngdb  \ 
--e PGHOST=postgres \ 
--e PGPORT=5432 \ 
--e SHIPHOST=http://88.198.18.252:28888 \ 
--e HYPERIONHOST=http://88.198.18.252:7000 \ 
--e STREAMINGHOST=ws://88.198.18.252:29876 
-```
-
+> **Note**: All environment variables can be configured in the `.env` file. Docker Compose will automatically pick up these values - no need to pass them manually on the command line.
 
 ### UPGRADES
 
@@ -99,3 +177,6 @@ RENAME COLUMN last_in_schedule TO first_in_schedule;```
 
 restart with --firstart run for 5 minutes then start as normal
 restart fastify 
+```
+
+

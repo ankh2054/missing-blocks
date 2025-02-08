@@ -1,23 +1,44 @@
-version: '3'
+version: '3.8'
 
 services:
-  web:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"
+    environment:
+      - PORT=${PORT:-3000}
+      - PGUSER=${PGUSER:-pguser}
+      - DB_PASSWORD=${DB_PASSWORD:-dbpassword}
+      - PGDB=${PGDB:-dbname}
+      - PGHOST=db
+      - PGPORT=${PGPORT:-5432}
+      - HOST=${HOST:-missm.sentnl.io}
+      - SHIPHOST=${SHIPHOST:-http://127.0.0.1:8888}
+      - HYPERIONHOST=${HYPERIONHOST:-http://127.0.0.1:7000}
+      - STREAMINGHOST=${STREAMINGHOST:-ws://127.0.0.1:9876}
+      - RECORDEMPTYBLOCKS=${RECORDEMPTYBLOCKS:-true}
     depends_on:
       - db
     networks:
       - app-network
+    restart: unless-stopped
 
   db:
     image: postgres:13
+    environment:
+      - POSTGRES_USER=${PGUSER:-pguser}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-dbpassword}
+      - POSTGRES_DB=${PGDB:-dbname}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./postgresql.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${PGPORT:-5432}:5432"
     networks:
       - app-network
+    restart: unless-stopped
 
 networks:
   app-network:
