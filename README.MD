@@ -112,33 +112,6 @@ The application is containerized using Docker and docker-compose. The setup incl
    - Creates user `waxuser` with necessary permissions
    - Exposed on configured port (default 5432)
 
-### Quick Start
-```bash
-# Start everything
-docker-compose up --build
-
-# Start in background
-docker-compose up -d --build
-
-# View logs
-docker-compose logs -f
-
-# Stop everything
-docker-compose down
-
-# Stop and remove volumes (will reset database)
-docker-compose down -v
-```
-
-### Database Reset
-If you need to reset the database:
-```bash
-# Remove existing containers and volumes
-docker-compose down -v
-
-# Start fresh (will reinitialize DB from postgresql.sql)
-docker-compose up --build
-```
 
 ### Accessing Services
 - Fastify API: http://localhost:3000
@@ -166,8 +139,57 @@ The following tables are automatically created on first startup:
 |**SHIPHOST**              |`http://88.198.18.252:28888`           | SHIP host                            |
 |**HYPERIONHOST**          |`http://88.198.18.252:7000`            | Hyperion Host                        |
 |**STREAMINGHOST**         |`ws://88.198.18.252:29876`             | Streaming Host                       |
+|**VIRTUAL_HOST**          |`your.domain.com`                      | Domain for nginx-proxy routing        |
+|**LETSENCRYPT_HOST**      |`your.domain.com`                      | Domain for SSL certificate           |
 
 > **Note**: All environment variables can be configured in the `.env` file. Docker Compose will automatically pick up these values - no need to pass them manually on the command line.
+
+### Using with nginx-proxy
+The application is configured to work with nginx-proxy for automatic SSL and domain routing. To use this:
+
+1. Make sure nginx-proxy is running:
+```bash
+# Example nginx-proxy setup (if you don't have it running)
+docker network create nginx-proxy
+docker run -d -p 80:80 -p 443:443 \
+  --name nginx-proxy \
+  --net nginx-proxy \
+  -v /var/run/docker.sock:/tmp/docker.sock:ro \
+  jwilder/nginx-proxy
+```
+
+2. Set these variables in your .env file:
+```bash
+VIRTUAL_HOST=your.domain.com
+LETSENCRYPT_HOST=your.domain.com
+```
+
+The application will automatically connect to the nginx-proxy network and be accessible via your domain with SSL.
+
+### Running both mainnet and testnet instances
+To run multiple instances of the application using different configurations:
+
+1. Create different env files for each instance:
+```bash
+cp defaults.env .env.instance1
+cp defaults.env .env.instance2
+```
+
+2. Start each instance with its own env file:
+```bash
+# Start first instance
+docker-compose --env-file .env.instance1 -p instance1 up -d
+
+# Start second instance
+docker-compose --env-file .env.instance2 -p instance2 up -d
+```
+
+3. Stop specific instances:
+```bash
+docker-compose -p instance1 down
+docker-compose -p instance2 down
+```
+
 
 ### UPGRADES
 

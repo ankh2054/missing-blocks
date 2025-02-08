@@ -19,10 +19,12 @@ services:
       - HYPERIONHOST=${HYPERIONHOST:-http://127.0.0.1:7000}
       - STREAMINGHOST=${STREAMINGHOST:-ws://127.0.0.1:9876}
       - RECORDEMPTYBLOCKS=${RECORDEMPTYBLOCKS:-true}
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - LETSENCRYPT_HOST=${LETSENCRYPT_HOST}
     depends_on:
       - db
     networks:
-      - app-network
+      - sentnl-net
     restart: unless-stopped
 
   db:
@@ -37,12 +39,14 @@ services:
     ports:
       - "${PGPORT:-5432}:5432"
     networks:
-      - app-network
+      - sentnl-net
     restart: unless-stopped
 
 networks:
   app-network:
     driver: bridge
+  nginx-proxy:
+    external: true
 
 volumes:
   postgres-data:
