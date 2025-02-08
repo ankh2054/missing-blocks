@@ -163,16 +163,16 @@ PGHOST=testnet-db
 3. Start each instance with its own env file:
 ```bash
 # Start first instance
-docker-compose --env-file .env.mainnet -p mainnet up -d
+docker-compose --env-file .env.mainnet -p missingblocks-mainnet up -d
 
 # Start second instance
-docker-compose --env-file .env.testnet -p testnet up -d
+docker-compose --env-file .env.testnet -p missingblocks-testnet up -d
 ```
 
 4. Stop specific instances:
 ```bash
-docker-compose -p mainnet down
-docker-compose -p testnet down
+docker-compose -p missingblocks-mainnet down
+docker-compose -p missingblocks-testnet down
 ```
 
 

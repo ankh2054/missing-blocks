@@ -4,9 +4,9 @@ CREATE USER waxuser WITH PASSWORD 'Nightshade900!';
 
 CREATE DATABASE missingwax;
 
-\c missingwax;
+GRANT ALL PRIVILEGES ON DATABASE missingwax TO waxuser;
 
-DROP SCHEMA IF EXISTS missingwax CASCADE;
+\c missingwax;
 
 CREATE SCHEMA missingwax;
 
@@ -67,7 +67,7 @@ CREATE TABLE missingwax.monitoring(
   FOREIGN KEY (producer_id) REFERENCES missingwax.producer(id)
 );
 
-GRANT ALL PRIVILEGES ON DATABASE missingwax TO waxuser;
+
 GRANT ALL PRIVILEGES ON SCHEMA missingwax TO waxuser;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA missingwax TO waxuser;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA missingwax TO waxuser;
