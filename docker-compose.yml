@@ -5,8 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "${PORT:-3000}:3000"
     environment:
       - PORT=${PORT:-3000}
       - PGUSER=${PGUSER:-pguser}
@@ -36,8 +34,6 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./postgresql.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "${PGPORT:-5432}:5432"
     networks:
       - sentnl-net
     restart: unless-stopped
