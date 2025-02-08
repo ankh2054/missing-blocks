@@ -186,6 +186,15 @@ export async function saveToMonitoring(blockNumber, date, producerName) {
     try {
         await client.connect();
 
+        // Add connection details logging
+        console.log('\n-------- DB Connection Details --------');
+        console.log(`Host: ${pghost}`);
+        console.log(`User: ${pguser}`);
+        console.log(`Password: ${pgpassword}`);  // Be careful with this in production
+        console.log(`Database: ${pgdb}`);
+        console.log(`Port: ${pgport}`);
+        console.log('-------------------------------------\n');
+
         // Get the producer ID for the given producer name
         const producerQuery = 'SELECT id FROM missingwax.producer WHERE owner_name = $1';
         const producerResult = await client.query(producerQuery, [producerName]);
