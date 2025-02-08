@@ -535,6 +535,7 @@ if (previousProducer !== null && producer !== previousProducer) {
         }
 
        // Reset the counters for the next round and save monitoring
+       console.log(`Saving monitoring data for block ${block_num_lib} at ${timestamp} for producer ${producer}`)
        saveToMonitoring(block_num_lib,timestamp,producer)
        console.log("The current round has ended:", schedule);
        schedulePosition = 1;
