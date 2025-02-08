@@ -1,17 +1,19 @@
 # Use the official Node.js image as our base image
-FROM node:18
+FROM node:16-bullseye
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy root package files and install dependencies
+# Install dependencies with increased memory limit and clean npm cache
 COPY package*.json ./
-RUN npm install
+RUN npm cache clean --force && \
+    npm install --no-optional --max-old-space-size=4096
 
-# Copy fastify package files and install dependencies
+# Copy and install fastify dependencies
 COPY fastify/package*.json ./fastify/
 WORKDIR /usr/src/app/fastify
-RUN npm install
+RUN npm cache clean --force && \
+    npm install --no-optional --max-old-space-size=4096
 
 # Return to app root
 WORKDIR /usr/src/app
@@ -21,8 +23,8 @@ COPY . .
 
 # Create a startup script
 RUN echo '#!/bin/bash\n\
-node streamingBlocks.js --firststart &\n\
-node fastify/server.js' > start.sh && \
+node --max-old-space-size=4096 streamingBlocks.js --firststart &\n\
+node --max-old-space-size=4096 fastify/server.js' > start.sh && \
 chmod +x start.sh
 
 EXPOSE 3000
