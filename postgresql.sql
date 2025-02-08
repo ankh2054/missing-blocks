@@ -1,5 +1,7 @@
 /*Execute scriot like this \i postgresql.sql */
 
+CREATE USER waxuser WITH PASSWORD 'Nightshade900!';
+
 DROP DATABASE IF EXISTS missingwax;
 
 CREATE DATABASE missingwax;
@@ -67,11 +69,9 @@ CREATE TABLE missingwax.monitoring(
   FOREIGN KEY (producer_id) REFERENCES missingwax.producer(id)
 );
 
-ALTER USER postgres WITH PASSWORD 'dbpassword';
-
-GRANT ALL PRIVILEGES ON DATABASE missingwax TO postgres;
-GRANT ALL PRIVILEGES ON SCHEMA missingwax TO postgres;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA missingwax TO postgres;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA missingwax TO postgres;
-ALTER DEFAULT PRIVILEGES IN SCHEMA missingwax GRANT ALL ON TABLES TO postgres;
-ALTER DEFAULT PRIVILEGES IN SCHEMA missingwax GRANT ALL ON SEQUENCES TO postgres;
+GRANT ALL PRIVILEGES ON DATABASE missingwax TO waxuser;
+GRANT ALL PRIVILEGES ON SCHEMA missingwax TO waxuser;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA missingwax TO waxuser;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA missingwax TO waxuser;
+ALTER DEFAULT PRIVILEGES IN SCHEMA missingwax GRANT ALL ON TABLES TO waxuser;
+ALTER DEFAULT PRIVILEGES IN SCHEMA missingwax GRANT ALL ON SEQUENCES TO waxuser;

@@ -7,8 +7,8 @@ services:
       dockerfile: Dockerfile
     environment:
       - PORT=${PORT:-3000}
-      - PGUSER=${PGUSER:-postgres}
-      - DB_PASSWORD=${DB_PASSWORD:-dbpassword}
+      - PGUSER=${PGUSER}
+      - DB_PASSWORD=${DB_PASSWORD}
       - PGDB=missingwax
       - PGHOST=db
       - PGPORT=${PGPORT:-5432}
@@ -28,8 +28,8 @@ services:
   db:
     image: postgres:13-bullseye
     environment:
-      - POSTGRES_USER=${PGUSER:-postgres}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-dbpassword}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=missingwax
     volumes:
       - postgres-data:/var/lib/postgresql/data
