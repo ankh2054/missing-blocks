@@ -7,7 +7,8 @@ WORKDIR /usr/src/app
 # Install dependencies with increased memory limit and clean npm cache
 COPY package*.json ./
 RUN npm cache clean --force && \
-    npm install --no-optional --max-old-space-size=4096
+    npm install --no-optional --max-old-space-size=4096 && \
+    npm install node-fetch@2
 
 # Copy and install fastify dependencies
 COPY fastify/package*.json ./fastify/
