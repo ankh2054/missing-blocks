@@ -2,8 +2,6 @@
 
 CREATE USER waxuser WITH PASSWORD 'Nightshade900!';
 
-DROP DATABASE IF EXISTS missingwax;
-
 CREATE DATABASE missingwax;
 
 \c missingwax;
