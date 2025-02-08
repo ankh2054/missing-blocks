@@ -25,8 +25,8 @@ COPY . .
 
 # Create a startup script that checks for first run
 RUN echo '#!/bin/bash\n\
-node fastify/server.js' > start.sh && \
 node streamingBlocks.js  && \
+node fastify/server.js' > start.sh && \
 chmod +x start.sh
 
 EXPOSE 8001
