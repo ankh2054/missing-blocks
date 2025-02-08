@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:13
+    image: postgres:13-bullseye
     environment:
       - POSTGRES_USER=${PGUSER:-pguser}
       - POSTGRES_PASSWORD=${DB_PASSWORD:-dbpassword}
