@@ -7,8 +7,8 @@ services:
       dockerfile: Dockerfile
     environment:
       - PORT=${PORT:-3000}
-      - PGUSER=${PGUSER}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - PGUSER=waxuser
+      - DB_PASSWORD=Nightshade900!
       - PGDB=missingwax
       - PGHOST=db
       - PGPORT=${PGPORT:-5432}
