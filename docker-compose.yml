@@ -5,12 +5,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: ${SERVICE_PREFIX:-missingblocks}-app
     environment:
       - PORT=${PORT:-3000}
       - PGUSER=waxuser
       - DB_PASSWORD=Nightshade900!
       - PGDB=missingwax
-      - PGHOST=db
+      - PGHOST=${SERVICE_PREFIX:-missingblocks}-db
       - PGPORT=${PGPORT:-5432}
       - HOST=${HOST:-missm.sentnl.io}
       - SHIPHOST=${SHIPHOST:-http://127.0.0.1:8888}
@@ -27,6 +28,7 @@ services:
     restart: unless-stopped
 
   db:
+    container_name: ${SERVICE_PREFIX:-missingblocks}-db
     image: postgres:13-bullseye
     environment:
       - POSTGRES_USER=postgres
