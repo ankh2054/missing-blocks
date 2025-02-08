@@ -25,12 +25,7 @@ COPY . .
 
 # Create a startup script that checks for first run
 RUN echo '#!/bin/bash\n\
-if [ ! -f "/usr/src/app/.first_run_complete" ]; then\n\
-    node streamingBlocks.js --firststart &\n\
-    touch /usr/src/app/.first_run_complete\n\
-else\n\
-    node streamingBlocks.js &\n\
-fi\n\
+node streamingBlocks.js  && \
 node fastify/server.js' > start.sh && \
 chmod +x start.sh
 
