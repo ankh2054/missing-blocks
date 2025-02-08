@@ -1,5 +1,5 @@
 # Use the official Node.js image as our base image
-FROM node:16-bullseye
+FROM node:18-bullseye
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm cache clean --force && \
     npm install --no-optional --max-old-space-size=4096 && \
-    npm install node-fetch@2
+    npm install node-fetch@3
 
 # Copy and install fastify dependencies
 COPY fastify/package*.json ./fastify/
