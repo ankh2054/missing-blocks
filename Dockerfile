@@ -4,6 +4,9 @@ FROM node:20-bullseye
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
+# Install PM2 globally
+RUN npm install pm2 -g
+
 # Install dependencies with increased memory limit and clean npm cache
 COPY package*.json ./
 RUN npm cache clean --force && \
@@ -23,13 +26,28 @@ WORKDIR /usr/src/app
 # Copy the rest of our application to the container
 COPY . .
 
-# Create a startup script that checks for first run
-RUN echo '#!/bin/bash\n\
-node streamingBlocks.js  && \
-node fastify/server.js' > start.sh && \
-chmod +x start.sh
+# Create PM2 config file
+RUN echo '{\n\
+  "apps": [{\n\
+    "name": "streaming",\n\
+    "script": "streamingBlocks.js",\n\
+    "instances": 1,\n\
+    "autorestart": true,\n\
+    "watch": false,\n\
+    "time": true\n\
+  },\n\
+  {\n\
+    "name": "fastify",\n\
+    "script": "fastify/server.js",\n\
+    "instances": 1,\n\
+    "autorestart": true,\n\
+    "watch": false,\n\
+    "time": true\n\
+  }]\n\
+}' > ecosystem.config.json
 
 EXPOSE 8001
 
-CMD ["./start.sh"]
+# Start PM2 in no-daemon mode
+CMD ["pm2-runtime", "ecosystem.config.json"]
  
